@@ -19,6 +19,13 @@ dependencies_update = true
 generate_changelog = true
 changelog_path = "CHANGELOG.md"
 
+# Package-specific configuration
+[[package]]
+name = "rust-nix-template"
+# The version in Cargo.toml will be automatically updated by release-plz
+# The docs/source/conf.py will automatically read from Cargo.toml
+# No additional files need manual version updates
+
 # Custom release body template with links to docs and coverage
 git_release_body = """{{ changelog }}
 

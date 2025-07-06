@@ -3,24 +3,50 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
+import toml
+from pathlib import Path
+
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'my-crate'
-copyright = '2024, Your Name'
-author = 'Your Name'
-release = '0.1.0'
+# Read project info from Cargo.toml
+cargo_toml_path = Path(__file__).parent.parent.parent / "Cargo.toml"
+cargo_data = toml.load(cargo_toml_path)
+
+project = cargo_data["package"]["name"]
+
+# Extract author information from Cargo.toml
+authors_list = cargo_data["package"].get("authors", ["Unknown"])
+# Take the first author and extract just the name part (before email if present)
+first_author = authors_list[0]
+if "<" in first_author:
+    author_name = first_author.split("<")[0].strip()
+else:
+    author_name = first_author.strip()
+
+# Generate copyright with current year (2025)
+copyright = f'2025, {author_name}'
+author = author_name
+release = cargo_data["package"]["version"]
+
+
+templates_path = [
+    "_templates",
+]
+
+html_sidebars = [
+    "versioning.html",
+]
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
     "sphinx_multiversion",
-    # "sphinxcontrib_rust",  # Temporarily commented out for testing
     "myst_parser",
+    # "sphinxcontrib_rust",  # Temporarily commented out for testing
 ]
 
-templates_path = ['_templates']
 exclude_patterns = []
 
 source_suffix = {
@@ -30,36 +56,29 @@ source_suffix = {
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
-
-html_theme = 'sphinx_rtd_theme'
-html_static_path = ['_static']
-html_sidebars = {
-    '**': [
-        'versioning.html',
-    ],
-}
+# html_theme = 'sphinx_rtd_theme'
 
 # -- Options for sphinx-multiversion -----------------------------------------
-smv_tag_whitelist = r'^v.*$'
-smv_branch_whitelist = r'^main$'
-smv_remote_whitelist = r'^(origin|upstream)$'
-smv_released_pattern = r'^refs/tags/v.*$'
+# Whitelist pattern for tags (set to None to ignore all tags)
+smv_tag_whitelist = r'^.*$'
+# Whitelist pattern for branches (set to None to ignore all branches)
+smv_branch_whitelist = r'^.*$'
+# Whitelist pattern for remotes (set to None to use local branches only)
+smv_remote_whitelist = None
+# Pattern for released versions
+smv_released_pattern = r'^tags/.*$'
+# Format for versioned output directories inside the build directory
 smv_outputdir_format = '{ref.name}'
-
-# -- Options for sphinxcontrib-rust ------------------------------------------
-rust_crates = {
-    "my_crate": "../../",
-}
-rust_doc_dir = "../crates/"
-rust_rustdoc_fmt = "md"
+# Determines whether remote or local git branches/tags are preferred if their output dirs conflict
+smv_prefer_remote_refs = True
 
 # -- Options for myst-parser -------------------------------------------------
-myst_enable_extensions = {
-    "attrs_block",
-    "colon_fence",
-    "html_admonition",
-    "replacements",
-    "smartquotes",
-    "strikethrough",
-    "tasklist",
-}
+# myst_enable_extensions = {
+#     "attrs_block",
+#     "colon_fence",
+#     "html_admonition",
+#     "replacements",
+#     "smartquotes",
+#     "strikethrough",
+#     "tasklist",
+# }

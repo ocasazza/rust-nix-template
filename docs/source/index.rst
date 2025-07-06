@@ -6,6 +6,7 @@ Welcome to rust-nix-template's documentation!
    :caption: Contents:
 
    API Reference <../crates/rust_nix_template/lib>
+   sample_docs
 
 Indices and tables
 ==================

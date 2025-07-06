@@ -105,9 +105,9 @@ This template provides comprehensive automation for the entire development lifec
 ### 🚀 Semantic Versioning & Releases
 
 **Release Strategy**:
-- **Patch releases** (0.1.0 → 0.1.1): Automatic on every commit to `main`
-- **Minor releases** (0.1.0 → 0.2.0): Triggered by conventional commits (e.g., `feat:`)
-- **Major releases** (0.1.0 → 1.0.0): Triggered by breaking change commits (e.g., `feat!:`)
+- **Patch releases** (e.g., 0.1.0 → 0.1.1): Automatic on every commit to `main`
+- **Minor releases** (e.g., 0.1.0 → 0.2.0): Triggered by conventional commits (e.g., `feat:`)
+- **Major releases** (e.g., 0.1.0 → 1.0.0): Triggered by breaking change commits (e.g., `feat!:`)
 
 **Setup**:
 1. **Add Repository Secrets**:
@@ -246,6 +246,28 @@ This template includes `Cargo.lock` in version control (not in `.gitignore`). Th
 - **Libraries**: You may choose to add `Cargo.lock` to `.gitignore` if you prefer
 
 The current setup works for both use cases and ensures release-plz functions correctly.
+
+### Automated Version Management
+
+This template eliminates the need for manual version updates across files:
+
+**✅ Automatically Updated**:
+- `Cargo.toml` version → Updated by release-plz
+- Documentation version → Dynamically read from `Cargo.toml`
+- Built documentation → Inherits version from Sphinx config
+- GitHub releases → Tagged with correct version
+- CHANGELOG.md → Generated with version headers
+
+**🚫 No Manual Updates Required**:
+- No hardcoded version numbers in documentation
+- No need to update multiple files for each release
+- Version consistency guaranteed across all components
+
+**How It Works**:
+1. `release-plz` updates `Cargo.toml` version based on conventional commits
+2. `docs/source/conf.py` reads version from `Cargo.toml` using Python `toml` library
+3. Sphinx builds documentation with correct version automatically
+4. All other components inherit or reference the single source of truth
 
 ### Documentation Customization
 
