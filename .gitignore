@@ -46,4 +46,4 @@ Thumbs.db
 # Nix
 result
 result-*
-.direnv/
+.direnv

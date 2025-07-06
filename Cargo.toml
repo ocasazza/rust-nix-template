@@ -22,3 +22,4 @@ name = "rust-nix-template"
 path = "src/main.rs"
 
 [dependencies]
+sphinx-rustdocgen = "1.0.0"

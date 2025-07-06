@@ -9,6 +9,7 @@
       url = "github:rustsec/advisory-db";
       flake = false;
     };
+    rust-bin.url = "github:oxalica/rust-overlay";
   };
 
   outputs =
@@ -18,21 +19,33 @@
       crane,
       flake-utils,
       advisory-db,
+      rust-bin,
       ...
     }:
     flake-utils.lib.eachDefaultSystem (
       system:
       let
-        pkgs = nixpkgs.legacyPackages.${system};
+        pkgs = import nixpkgs {
+          inherit system;
+          overlays = [ rust-bin.overlays.default ];
+        };
         inherit (pkgs) lib;
         craneLib = crane.mkLib pkgs;
-        src = craneLib.cleanCargoSource ./.;
+        rustToolchain = pkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
+        src = pkgs.lib.cleanSourceWith {
+          src = ./.;
+          name = "rust-nix-template-src";
+          filter = name: type:
+            pkgs.lib.cleanSourceFilter name type
+            || (pkgs.lib.hasInfix "/rust-toolchain.toml" name);
+        };
         # Common arguments can be set here to avoid repeating them later
         commonArgs = {
           inherit src;
           strictDeps = true;
           buildInputs = [
             # Add additional build inputs here
+            rustToolchain
           ];
           # Additional environment variables can be set directly
           # MY_CUSTOM_VAR = "some value";
@@ -133,6 +146,7 @@
               source .venv/bin/activate
               unset RUSTFLAGS
               pip install -r requirements.txt
+              rm -rf docs/build
               sphinx-multiversion docs/source docs/build/html
               python -m http.server --directory docs/build/html 8000
               echo "--- docs serving at http://localhost:8000 ---"
@@ -149,12 +163,14 @@
           # Extra inputs can be added here; cargo and rustc are provided by default.
           packages = with pkgs; [
             grcov
-            llvmPackages.llvm
+            llvmPackages.llvm # Re-adding llvmPackages.llvm for runtime libraries
             git
             python3
             python3Packages.pip
             python3Packages.virtualenv
           ];
+          # Use the rustToolchain defined above
+          buildInputs = [ rustToolchain ];
         };
       }
     );

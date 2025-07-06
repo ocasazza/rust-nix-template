@@ -29,22 +29,13 @@ copyright = f'2025, {author_name}'
 author = author_name
 release = cargo_data["package"]["version"]
 
-
-templates_path = [
-    "_templates",
-]
-
-html_sidebars = [
-    "versioning.html",
-]
-
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
-    "sphinx_multiversion",
     "myst_parser",
-    # "sphinxcontrib_rust",  # Temporarily commented out for testing
+    "sphinxcontrib_rust",  # Temporarily commented out for testing
+    "sphinx_multiversion",
 ]
 
 exclude_patterns = []
@@ -54,11 +45,30 @@ source_suffix = {
     ".md": "markdown",
 }
 
+# -- Options for sphinxcontrib-rust ------------------------------------------
+# https://sphinxcontrib-rust.readthedocs.io/en/stable/#
+
+# rust_crates = {
+#     "my_crate": ".",
+#     "my_crate_derive": "my-crate-derive",
+# }
+# rust_doc_dir = "docs/crates/"
+# rust_rustdoc_fmt = "rst"
+
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 # html_theme = 'sphinx_rtd_theme'
 
 # -- Options for sphinx-multiversion -----------------------------------------
+templates_path = [
+    "_templates",
+]
+
+html_sidebars = {
+    '**': [
+        'versioning.html',
+    ],
+}
 # Whitelist pattern for tags (set to None to ignore all tags)
 smv_tag_whitelist = r'^.*$'
 # Whitelist pattern for branches (set to None to ignore all branches)
@@ -73,12 +83,12 @@ smv_outputdir_format = '{ref.name}'
 smv_prefer_remote_refs = True
 
 # -- Options for myst-parser -------------------------------------------------
-# myst_enable_extensions = {
-#     "attrs_block",
-#     "colon_fence",
-#     "html_admonition",
-#     "replacements",
-#     "smartquotes",
-#     "strikethrough",
-#     "tasklist",
-# }
+myst_enable_extensions = {
+    "attrs_block",
+    "colon_fence",
+    "html_admonition",
+    "replacements",
+    "smartquotes",
+    "strikethrough",
+    "tasklist",
+}
