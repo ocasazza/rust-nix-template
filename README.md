@@ -115,8 +115,9 @@ This template provides comprehensive automation for the entire development lifec
 
 **How It Works**:
 1. Push commits to `main` → `release-plz` analyzes changes and creates direct releases
-2. Package automatically published to crates.io + GitHub Release created
-3. GitHub Release triggers documentation deployment
+2. Auto-generated CHANGELOG.md updated with conventional commit categorization
+3. Package automatically published to crates.io + GitHub Release created
+4. GitHub Release triggers documentation deployment
 
 ### 📚 Documentation Deployment
 
@@ -150,9 +151,9 @@ This template provides comprehensive automation for the entire development lifec
 - **Documentation Deployment**: Updates GitHub Pages
 - **Release Comments**: Adds deployment links to GitHub releases
 
-### 🔧 Conventional Commits
+### 🔧 Conventional Commits & Auto-Generated Changelog
 
-This template uses [Conventional Commits](https://www.conventionalcommits.org/) for automatic versioning:
+This template uses [Conventional Commits](https://www.conventionalcommits.org/) for automatic versioning and changelog generation:
 
 ```bash
 # Patch release (bug fixes)
@@ -170,6 +171,21 @@ git commit -m "docs: update installation guide"
 # Chores (no version bump)
 git commit -m "chore: update dependencies"
 ```
+
+**Auto-Generated CHANGELOG.md**:
+- Automatically created and updated by `release-plz` on each release
+- Groups commits by type with emoji categories:
+  - 🚀 Features (`feat:`)
+  - 🐛 Bug Fixes (`fix:`)
+  - 📚 Documentation (`docs:`)
+  - ⚡ Performance (`perf:`)
+  - ♻️ Refactor (`refactor:`)
+  - 🧪 Testing (`test:`)
+  - 👷 CI/CD (`ci:`)
+  - 🔧 Miscellaneous (`chore:`)
+- Includes links to commits and GitHub issues/PRs
+- Follows [Keep a Changelog](https://keepachangelog.com/) format
+- Automatically handles version links and dates
 
 ### 📊 Coverage & Quality
 

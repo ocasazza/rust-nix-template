@@ -15,6 +15,10 @@ semver_check = true
 # Update all dependencies in release PRs
 dependencies_update = true
 
+# Auto-generate changelog
+generate_changelog = true
+changelog_path = "CHANGELOG.md"
+
 # Custom release body template with links to docs and coverage
 git_release_body = """{{ changelog }}
 
@@ -61,6 +65,22 @@ protect_breaking_commits = true
 
 # Sort commits by newest first
 sort_commits = "newest"
+
+# Changelog header
+header = """# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+"""
+
+# Include all commits (not just conventional ones)
+filter_unconventional = false
+
+# Trim whitespace from commit messages
+trim = true
 
 # Custom commit parsers for better categorization
 commit_parsers = [
