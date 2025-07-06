@@ -1,11 +1,11 @@
-Welcome to my-crate's documentation!
-======================================
+Welcome to rust-nix-template's documentation!
+==============================================
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-   API Reference <../crates/my_crate/lib>
+   API Reference <../crates/rust_nix_template/lib>
 
 Indices and tables
 ==================
