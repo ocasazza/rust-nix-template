@@ -134,25 +134,16 @@
             program = "${pkgs.writeShellScript "coverage-app" ''
               set -e
               echo "--- Installing cargo-tarpaulin for coverage ---"
-
               # Use cargo-tarpaulin which works better in Nix environments
               if ! command -v cargo-tarpaulin &> /dev/null; then
                 cargo install cargo-tarpaulin
               fi
-
-              echo "--- Running tests with coverage ---"
-
               # Clean previous coverage data
               rm -rf target/coverage
               mkdir -p target/coverage
-
               # Generate coverage with tarpaulin
               cargo tarpaulin --out Html --output-dir target/coverage/html
               cargo tarpaulin --out Lcov --output-dir target/coverage
-
-              echo "--- Coverage report generated in ./target/coverage/ ---"
-              echo "--- HTML report: ./target/coverage/html/tarpaulin-report.html ---"
-              echo "--- LCOV report: ./target/coverage/lcov.info ---"
             ''}";
           };
 
@@ -160,18 +151,13 @@
             type = "app";
             program = "${pkgs.writeShellScript "docs-app" ''
               set -e
-              echo "--- Setting up Python virtual environment ---"
               if [ ! -d ".venv" ]; then
                 python -m venv .venv
               fi
               source .venv/bin/activate
-              # Clear RUSTFLAGS to avoid profiler issues during sphinxcontrib-rust installation
               unset RUSTFLAGS
-              echo "--- Installing Python dependencies from requirements.txt ---"
               pip install -r requirements.txt
-              echo "--- Building versioned Sphinx documentation ---"
               sphinx-multiversion docs/source docs/build/html
-              echo "--- Docs built in ./docs/build/html ---"
             ''}";
           };
 
@@ -179,20 +165,15 @@
             type = "app";
             program = "${pkgs.writeShellScript "serve-docs-app" ''
               set -e
-              echo "--- Setting up Python virtual environment ---"
               if [ ! -d ".venv" ]; then
                 python -m venv .venv
               fi
               source .venv/bin/activate
-              # Clear RUSTFLAGS to avoid profiler issues during sphinxcontrib-rust installation
               unset RUSTFLAGS
-              echo "--- Installing Python dependencies from requirements.txt ---"
               pip install -r requirements.txt
-              echo "--- Building versioned Sphinx documentation ---"
               sphinx-multiversion docs/source docs/build/html
-              echo "--- Docs built in ./docs/build/html ---"
-              echo "--- Starting web server at http://localhost:8000 ---"
               python -m http.server --directory docs/build/html 8000
+              echo "--- docs serving at http://localhost:8000 ---"
             ''}";
           };
         };
