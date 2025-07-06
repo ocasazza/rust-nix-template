@@ -9,8 +9,7 @@ homepage = "https://ocasazza.github.io/rust-nix-template/"
 documentation = "https://ocasazza.github.io/rust-nix-template/"
 readme = "README.md"
 keywords = ["template", "nix", "automation", "documentation", "rust"]
-categories = ["development-tools", "template"]
-authors = ["Your Name <your.email@example.com>"]
+authors = ["Olive Casazza <olive.casazza@schrodinger.com>"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
