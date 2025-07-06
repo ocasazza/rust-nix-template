@@ -5,14 +5,9 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     rust-overlay.url = "github:oxalica/rust-overlay";
-    crane = {
-      url = "github:ipetkov/crane";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-    release-plz.url = "github:release-plz/release-plz";
   };
 
-  outputs = { self, nixpkgs, flake-utils, rust-overlay, crane, release-plz }:
+  outputs = { self, nixpkgs, flake-utils, rust-overlay }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs {
@@ -24,14 +19,33 @@
           extensions = [ "rust-src" ];
         };
 
-        craneLib = (crane.lib.${system}).overrideToolchain rustToolchain;
+        craneLib = pkgs.crane;
 
-        src = pkgs.lib.cleanSource ./.;
+        release-plz-src = pkgs.fetchFromGitHub {
+          owner = "release-plz";
+          repo = "release-plz";
+          rev = "v0.5.30";
+          sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # Placeholder, will be filled by Nix
+        };
 
-        cargoArtifacts = craneLib.buildDepsOnly { inherit src; };
+        # Build release-plz-cli from source
+        release-plz-cli = craneLib.buildPackage {
+          src = release-plz-src;
+          pname = "release-plz-cli";
+          cargoExtraArgs = "-p release-plz-cli";
+          toolchain = rustToolchain;
+        };
 
+        # Build our own crate
+        my-crate-src = pkgs.lib.cleanSource ./.;
+        my-crate-cargo-artifacts = craneLib.buildDepsOnly {
+          src = my-crate-src;
+          toolchain = rustToolchain;
+        };
         my-crate = craneLib.buildPackage {
-          inherit src cargoArtifacts;
+          src = my-crate-src;
+          cargoArtifacts = my-crate-cargo-artifacts;
+          toolchain = rustToolchain;
         };
 
         # Python environment for Sphinx docs
@@ -47,12 +61,15 @@
       {
         packages = {
           default = my-crate;
+          release-plz-cli = release-plz-cli;
         };
 
         checks = {
           # Run tests with `nix flake check`
           default = craneLib.checkPackage {
-            inherit src cargoArtifacts;
+            src = my-crate-src;
+            cargoArtifacts = my-crate-cargo-artifacts;
+            toolchain = rustToolchain;
           };
         };
 
@@ -70,7 +87,7 @@
               pkgs.git
 
               # Releases
-              release-plz.packages.${system}.release-plz-cli
+              release-plz-cli
             ];
 
             # Environment variables for coverage
