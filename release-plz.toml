@@ -1,0 +1,8 @@
+# Defines the git tag format
+git_tag_format = "v$version"
+
+[workspace]
+# The following settings are applied to all crates in the workspace
+changelog_path = "CHANGELOG.md"
+changelog_update = true
+allow_dirty = false
