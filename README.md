@@ -225,6 +225,14 @@ Edit `release-plz.toml` to customize:
 **Python dependencies**: Add to `requirements.txt`
 **Nix dependencies**: Add to `flake.nix` packages list
 
+### Cargo.lock Management
+
+This template includes `Cargo.lock` in version control (not in `.gitignore`). This is recommended for:
+- **Applications**: Always commit `Cargo.lock` for reproducible builds
+- **Libraries**: You may choose to add `Cargo.lock` to `.gitignore` if you prefer
+
+The current setup works for both use cases and ensures release-plz functions correctly.
+
 ### Documentation Customization
 
 - **Sphinx config**: Edit `docs/source/conf.py`
