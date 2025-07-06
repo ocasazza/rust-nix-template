@@ -1,142 +1,221 @@
 {
-  description = "A professional Rust template with Nix, Sphinx docs, and automated releases";
+  description = "Build a cargo project";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+
+    crane.url = "github:ipetkov/crane";
+
     flake-utils.url = "github:numtide/flake-utils";
-    rust-overlay.url = "github:oxalica/rust-overlay";
+
+    advisory-db = {
+      url = "github:rustsec/advisory-db";
+      flake = false;
+    };
   };
 
-  outputs = { self, nixpkgs, flake-utils, rust-overlay }:
-    flake-utils.lib.eachDefaultSystem (system:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      crane,
+      flake-utils,
+      advisory-db,
+      ...
+    }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
       let
-        pkgs = import nixpkgs {
-          inherit system;
-          overlays = [ (import rust-overlay) ];
+        pkgs = nixpkgs.legacyPackages.${system};
+
+        inherit (pkgs) lib;
+
+        craneLib = crane.mkLib pkgs;
+        src = craneLib.cleanCargoSource ./.;
+
+        # Common arguments can be set here to avoid repeating them later
+        commonArgs = {
+          inherit src;
+          strictDeps = true;
+
+          buildInputs = [
+            # Add additional build inputs here
+          ];
+
+          # Additional environment variables can be set directly
+          # MY_CUSTOM_VAR = "some value";
         };
 
-        rustToolchain = pkgs.rust-bin.stable."1.77.2".default.override {
-          extensions = [ "rust-src" ];
-        };
+        # Build *just* the cargo dependencies, so we can reuse
+        # all of that work (e.g. via cachix) when running in CI
+        cargoArtifacts = craneLib.buildDepsOnly commonArgs;
 
-        craneLib = pkgs.crane;
-
-        release-plz-src = pkgs.fetchFromGitHub {
-          owner = "release-plz";
-          repo = "release-plz";
-          rev = "v0.5.30";
-          sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # Placeholder, will be filled by Nix
-        };
-
-        # Build release-plz-cli from source
-        release-plz-cli = craneLib.buildPackage {
-          src = release-plz-src;
-          pname = "release-plz-cli";
-          cargoExtraArgs = "-p release-plz-cli";
-          toolchain = rustToolchain;
-        };
-
-        # Build our own crate
-        my-crate-src = pkgs.lib.cleanSource ./.;
-        my-crate-cargo-artifacts = craneLib.buildDepsOnly {
-          src = my-crate-src;
-          toolchain = rustToolchain;
-        };
-        my-crate = craneLib.buildPackage {
-          src = my-crate-src;
-          cargoArtifacts = my-crate-cargo-artifacts;
-          toolchain = rustToolchain;
-        };
-
-        # Python environment for Sphinx docs
-        sphinxEnv = pkgs.python3.withPackages (ps: with ps; [
-          sphinx
-          sphinx-rtd-theme
-          sphinxcontrib-rust
-          sphinx-multiversion
-          myst-parser
-        ]);
-
+        # Build the actual crate itself, reusing the dependency
+        # artifacts from above.
+        my-crate = craneLib.buildPackage (
+          commonArgs
+          // {
+            inherit cargoArtifacts;
+          }
+        );
       in
       {
+        checks = {
+          # Build the crate as part of `nix flake check` for convenience
+          inherit my-crate;
+
+          # Run clippy (and deny all warnings) on the crate source,
+          # again, reusing the dependency artifacts from above.
+          #
+          # Note that this is done as a separate derivation so that
+          # we can block the CI if there are issues here, but not
+          # prevent downstream consumers from building our crate by itself.
+          my-crate-clippy = craneLib.cargoClippy (
+            commonArgs
+            // {
+              inherit cargoArtifacts;
+              cargoClippyExtraArgs = "--all-targets -- --deny warnings";
+            }
+          );
+
+          my-crate-doc = craneLib.cargoDoc (
+            commonArgs
+            // {
+              inherit cargoArtifacts;
+            }
+          );
+
+          # Check formatting
+          my-crate-fmt = craneLib.cargoFmt {
+            inherit src;
+          };
+
+          my-crate-toml-fmt = craneLib.taploFmt {
+            src = pkgs.lib.sources.sourceFilesBySuffices src [ ".toml" ];
+            # taplo arguments can be further customized below as needed
+            # taploExtraArgs = "--config ./taplo.toml";
+          };
+
+          # Audit dependencies
+          my-crate-audit = craneLib.cargoAudit {
+            inherit src advisory-db;
+          };
+
+          # Audit licenses
+          my-crate-deny = craneLib.cargoDeny {
+            inherit src;
+          };
+
+          # Run tests with cargo-nextest
+          # Consider setting `doCheck = false` on `my-crate` if you do not want
+          # the tests to run twice
+          my-crate-nextest = craneLib.cargoNextest (
+            commonArgs
+            // {
+              inherit cargoArtifacts;
+              partitions = 1;
+              partitionType = "count";
+              cargoNextestPartitionsExtraArgs = "--no-tests=pass";
+            }
+          );
+        };
+
         packages = {
           default = my-crate;
-          release-plz-cli = release-plz-cli;
-        };
-
-        checks = {
-          # Run tests with `nix flake check`
-          default = craneLib.checkPackage {
-            src = my-crate-src;
-            cargoArtifacts = my-crate-cargo-artifacts;
-            toolchain = rustToolchain;
-          };
-        };
-
-        devShells = {
-          default = pkgs.mkShell {
-            buildInputs = [
-              # Rust
-              rustToolchain
-              pkgs.cargo
-              pkgs.grcov
-              pkgs.llvmPackages.llvm
-
-              # Docs
-              sphinxEnv
-              pkgs.git
-
-              # Releases
-              release-plz-cli
-            ];
-
-            # Environment variables for coverage
-            RUSTFLAGS = "-C instrument-coverage";
-            LLVM_PROFILE_FILE = "target/coverage/cargo-test-%p-%m.profraw";
-            CARGO_INCREMENTAL = "0";
-          };
         };
 
         apps = {
-          # Generate and view code coverage
-          coverage = {
-            type = "app";
-            program = pkgs.writeShellScript "coverage-app" ''
-              set -e
-              echo "--- Running tests ---"
-              cargo test
-
-              echo "--- Generating coverage report ---"
-              grcov . --binary-path ./target/debug/deps/ -s . -t html --branch --ignore-not-existing -o ./target/coverage/html
-              grcov . --binary-path ./target/debug/deps/ -s . -t lcov --branch --ignore-not-existing -o ./target/coverage/tests.lcov
-
-              echo "--- Coverage report generated in ./target/coverage/ ---"
-              echo "--- You can view the HTML report at ./target/coverage/html/index.html ---"
-            '';
+          default = flake-utils.lib.mkApp {
+            drv = my-crate;
           };
 
-          # Build and serve versioned Sphinx documentation
+          coverage = {
+            type = "app";
+            program = "${pkgs.writeShellScript "coverage-app" ''
+              set -e
+              echo "--- Installing cargo-tarpaulin for coverage ---"
+
+              # Use cargo-tarpaulin which works better in Nix environments
+              if ! command -v cargo-tarpaulin &> /dev/null; then
+                cargo install cargo-tarpaulin
+              fi
+
+              echo "--- Running tests with coverage ---"
+
+              # Clean previous coverage data
+              rm -rf target/coverage
+              mkdir -p target/coverage
+
+              # Generate coverage with tarpaulin
+              cargo tarpaulin --out Html --output-dir target/coverage/html
+              cargo tarpaulin --out Lcov --output-dir target/coverage
+
+              echo "--- Coverage report generated in ./target/coverage/ ---"
+              echo "--- HTML report: ./target/coverage/html/tarpaulin-report.html ---"
+              echo "--- LCOV report: ./target/coverage/lcov.info ---"
+            ''}";
+          };
+
           docs = {
             type = "app";
-            program = pkgs.writeShellScript "docs-app" ''
+            program = "${pkgs.writeShellScript "docs-app" ''
               set -e
+              echo "--- Setting up Python virtual environment ---"
+              if [ ! -d ".venv" ]; then
+                python -m venv .venv
+              fi
+              source .venv/bin/activate
+              # Clear RUSTFLAGS to avoid profiler issues during sphinxcontrib-rust installation
+              unset RUSTFLAGS
+              echo "--- Installing Python dependencies from requirements.txt ---"
+              pip install -r requirements.txt
               echo "--- Building versioned Sphinx documentation ---"
               sphinx-multiversion docs/source docs/build/html
               echo "--- Docs built in ./docs/build/html ---"
-            '';
+            ''}";
           };
 
           serve-docs = {
             type = "app";
-            program = pkgs.writeShellScript "serve-docs-app" ''
+            program = "${pkgs.writeShellScript "serve-docs-app" ''
               set -e
+              echo "--- Setting up Python virtual environment ---"
+              if [ ! -d ".venv" ]; then
+                python -m venv .venv
+              fi
+              source .venv/bin/activate
+              # Clear RUSTFLAGS to avoid profiler issues during sphinxcontrib-rust installation
+              unset RUSTFLAGS
+              echo "--- Installing Python dependencies from requirements.txt ---"
+              pip install -r requirements.txt
               echo "--- Building versioned Sphinx documentation ---"
               sphinx-multiversion docs/source docs/build/html
               echo "--- Docs built in ./docs/build/html ---"
               echo "--- Starting web server at http://localhost:8000 ---"
-              ${pkgs.python3}/bin/python -m http.server --directory docs/build/html 8000
-            '';
+              python -m http.server --directory docs/build/html 8000
+            ''}";
           };
         };
-      });
+
+        devShells.default = craneLib.devShell {
+          # Inherit inputs from checks.
+          checks = self.checks.${system};
+
+          # Additional dev-shell environment variables can be set directly
+          RUSTFLAGS = "-C instrument-coverage";
+          LLVM_PROFILE_FILE = "target/coverage/cargo-test-%p-%m.profraw";
+          CARGO_INCREMENTAL = "0";
+
+          # Extra inputs can be added here; cargo and rustc are provided by default.
+          packages = with pkgs; [
+            grcov
+            llvmPackages.llvm
+            git
+            python3
+            python3Packages.pip
+            python3Packages.virtualenv
+          ];
+        };
+      }
+    );
 }

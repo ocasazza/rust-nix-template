@@ -1,8 +1,102 @@
-# Defines the git tag format
-git_tag_format = "v$version"
-
 [workspace]
-# The following settings are applied to all crates in the workspace
-changelog_path = "CHANGELOG.md"
-changelog_update = true
-allow_dirty = false
+# Publish to crates.io
+publish = true
+
+# Create GitHub releases for documentation triggers
+git_release_enable = true
+
+# Release on every commit to main (patch versions)
+# PR merges with conventional commits will create minor versions
+release_always = true
+
+# Run semver checks
+semver_check = true
+
+# Update all dependencies in release PRs
+dependencies_update = true
+
+# Add labels to release PRs for automation
+pr_labels = ["release", "automated"]
+
+# Custom release body template with links to docs and coverage
+git_release_body = """{{ changelog }}
+
+## 📚 Documentation & Reports
+
+- 📖 [Documentation](https://ocasazza.github.io/rust-nix-template/)
+- 📊 [Coverage Report](https://ocasazza.github.io/rust-nix-template/coverage/)
+- 🔧 [Development Guide](https://github.com/ocasazza/rust-nix-template#development)
+
+## 🚀 Quick Start
+
+```bash
+# Use this template
+cargo generate --git https://github.com/ocasazza/rust-nix-template
+
+# Or with Nix
+nix flake new -t github:ocasazza/rust-nix-template my-project
+```
+"""
+
+# Custom PR body template
+pr_body = """## 🤖 Automated Release
+
+{% for release in releases %}
+### `{{ release.package }}` {{ release.previous_version }} → {{ release.next_version }}
+{% if release.semver_check == "incompatible" %}⚠️ **Breaking Changes Detected**{% elif release.semver_check == "compatible" %}✅ **API Compatible**{% endif %}
+
+{% if release.changelog %}
+<details>
+<summary>📋 Changelog</summary>
+
+{{ release.changelog }}
+</details>
+{% endif %}
+{% endfor %}
+
+## 📚 Documentation
+
+Documentation will be automatically updated at https://ocasazza.github.io/rust-nix-template/ when this PR is merged.
+
+---
+*This PR was generated automatically by [release-plz](https://github.com/release-plz/release-plz/)*
+"""
+
+[changelog]
+# Protect breaking changes from being filtered out
+protect_breaking_commits = true
+
+# Sort commits by newest first
+sort_commits = "newest"
+
+# Custom commit parsers for better categorization
+commit_parsers = [
+    { message = "^feat", group = "🚀 Features" },
+    { message = "^fix", group = "🐛 Bug Fixes" },
+    { message = "^doc", group = "📚 Documentation" },
+    { message = "^perf", group = "⚡ Performance" },
+    { message = "^refactor", group = "♻️ Refactor" },
+    { message = "^style", group = "🎨 Styling" },
+    { message = "^test", group = "🧪 Testing" },
+    { message = "^chore\\(release\\): prepare for", skip = true },
+    { message = "^chore\\(deps.*\\)", skip = true },
+    { message = "^chore", group = "🔧 Miscellaneous" },
+    { message = "^ci", group = "👷 CI/CD" },
+    { message = "^build", group = "📦 Build" },
+    { message = "^revert", group = "⏪ Reverts" },
+    { message = ".*", group = "📝 Other" },
+]
+
+# Link parsers for GitHub issues and PRs
+link_parsers = [
+    { pattern = "#(\\d+)", href = "https://github.com/ocasazza/rust-nix-template/issues/$1" },
+    { pattern = "RFC(\\d+)", text = "ietf-rfc$1", href = "https://datatracker.ietf.org/doc/html/rfc$1" }
+]
+
+# Commit preprocessors to clean up commit messages
+commit_preprocessors = [
+    # Convert issue numbers to links
+    { pattern = "\\(#([0-9]+)\\)", replace = "([#${1}](https://github.com/ocasazza/rust-nix-template/pull/${1}))" },
+    # Remove conventional commit scopes for cleaner changelog
+    { pattern = "^(\\w+)\\((.+)\\):", replace = "$1: " },
+]

@@ -16,7 +16,7 @@ release = '0.1.0'
 
 extensions = [
     "sphinx_multiversion",
-    "sphinxcontrib_rust",
+    # "sphinxcontrib_rust",  # Temporarily commented out for testing
     "myst_parser",
 ]
 

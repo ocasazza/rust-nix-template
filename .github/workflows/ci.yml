@@ -22,3 +22,102 @@ jobs:
 
       - name: Run Nix Flake Check
         run: nix flake check
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v22
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+
+      - name: Generate Coverage Report
+        run: nix run .#coverage
+
+      - name: Upload Coverage HTML Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: target/coverage/html/
+          retention-days: 30
+
+      - name: Upload Coverage LCOV
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-lcov
+          path: target/coverage/tests.lcov
+          retention-days: 30
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v22
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+
+      - name: Build Documentation
+        run: nix run .#docs
+
+      - name: Upload Documentation
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation
+          path: docs/build/html/
+          retention-days: 30
+
+      - name: Comment PR with Documentation Preview
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo, number } = context.issue;
+            const runId = context.runId;
+
+            const comment = `## 📚 Documentation Preview
+
+            The documentation has been built successfully!
+
+            📖 [Download Documentation Artifact](https://github.com/${owner}/${repo}/actions/runs/${runId})
+            📊 [Download Coverage Report](https://github.com/${owner}/${repo}/actions/runs/${runId})
+
+            > **Note**: Artifacts are available for 30 days and require being logged into GitHub to download.`;
+
+            // Find existing comment
+            const comments = await github.rest.issues.listComments({
+              owner,
+              repo,
+              issue_number: number,
+            });
+
+            const existingComment = comments.data.find(
+              comment => comment.body.includes('📚 Documentation Preview')
+            );
+
+            if (existingComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existingComment.id,
+                body: comment
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: number,
+                body: comment
+              });
+            }

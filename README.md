@@ -1,14 +1,17 @@
 # Rust Nix Template
 
-This is a comprehensive template for Rust projects that provides a fully reproducible development environment using Nix, versioned documentation with Sphinx, and automated releases with `release-plz`.
+This is a comprehensive template for Rust projects that provides a fully reproducible development environment using Nix, versioned documentation with Sphinx, and complete automation for releases, documentation deployment, and dependency management.
 
-## Features
+## ✨ Features
 
-- **Reproducible Builds**: A Nix flake (`flake.nix`) provides a consistent development environment for all contributors.
-- **Code Coverage**: Integrated code coverage reporting using `grcov`.
-- **Versioned Documentation**: Professional, versioned documentation powered by Sphinx, `sphinxcontrib-rust`, and `sphinx-multiversion`.
-- **Automated Releases**: `release-plz` and GitHub Actions work together to automate the entire release process, including changelog generation and publishing to `crates.io`.
-- **CI/CD**: GitHub Actions workflows for continuous integration and automated releases.
+- **🔄 Reproducible Builds**: A Nix flake (`flake.nix`) provides a consistent development environment for all contributors
+- **📊 Code Coverage**: Integrated code coverage reporting using `grcov` with HTML and LCOV output
+- **📚 Versioned Documentation**: Professional, versioned documentation powered by Sphinx, `sphinxcontrib-rust`, and `sphinx-multiversion`
+- **🚀 Automated Releases**: Complete semantic versioning with `release-plz` - patch releases on commits, minor on PRs, manual major releases
+- **🌐 GitHub Pages**: Automatic documentation and coverage deployment to GitHub Pages on releases
+- **🤖 Dependency Management**: Automated dependency updates via Dependabot with proper conventional commit formatting
+- **⚡ CI/CD**: Comprehensive GitHub Actions workflows for testing, coverage, documentation, and releases
+- **🔧 Development Tools**: Pre-configured development environment with all necessary tools
 
 ## Prerequisites
 
@@ -95,27 +98,175 @@ This template uses Sphinx to generate versioned documentation from your Rust doc
     ```
     You can then view your versioned documentation at `http://localhost:8000`.
 
-## Automated Releases
+## 🤖 Automation Features
 
-This template is configured to automate releases using `release-plz`.
+This template provides comprehensive automation for the entire development lifecycle.
 
-### Setup
+### 🚀 Semantic Versioning & Releases
 
-1.  **Create a GitHub App**:
-    For the best experience, create a GitHub App as described in the [`release-plz` documentation](https://release-plz.dev/docs/github/token#use-a-github-app). This allows the release PRs to trigger CI workflows.
-    -   Give the app "Read & write" permissions for "Contents" and "Pull requests".
-    -   Install the app on your repository.
+**Release Strategy**:
+- **Patch releases** (0.1.0 → 0.1.1): Automatic on every commit to `main`
+- **Minor releases** (0.1.0 → 0.2.0): Triggered by conventional commit PRs (e.g., `feat:`)
+- **Major releases** (0.1.0 → 1.0.0): Manual via breaking change commits (e.g., `feat!:`)
 
-2.  **Add Repository Secrets**:
-    In your GitHub repository settings, go to `Secrets and variables > Actions` and add the following secrets:
-    -   `APP_ID`: The ID of your GitHub App.
-    -   `APP_PRIVATE_KEY`: The private key you generated for your GitHub App.
-    -   `CARGO_REGISTRY_TOKEN`: Your API token from `crates.io` to allow publishing.
+**Setup**:
+1. **Configure GitHub Actions permissions**: Go to Settings → Actions → General → Workflow permissions → Allow GitHub Actions to create and approve pull requests
+2. **Add Repository Secrets**:
+   - `CARGO_REGISTRY_TOKEN`: Your API token from `crates.io` for publishing
 
-### How It Works
+**How It Works**:
+1. Push commits to `main` → `release-plz` analyzes changes and creates releases
+2. For minor/major changes → `release-plz` opens a Release PR with changelog
+3. Merge Release PR → Package published to crates.io + GitHub Release created
+4. GitHub Release triggers documentation deployment
 
-1.  When you push commits to the `main` branch, the `release-plz.yml` workflow runs.
-2.  `release-plz` determines if a new release is needed based on your commit messages (it follows Conventional Commits).
-3.  If a release is needed, it opens a "Release PR" containing the version bumps and an updated `CHANGELOG.md`.
-4.  The `ci.yml` workflow runs on this PR, ensuring all checks pass.
-5.  When you merge the Release PR, `release-plz` runs again, publishes the new version to `crates.io`, creates a GitHub Release, and tags the commit.
+### 📚 Documentation Deployment
+
+**Automatic deployment to GitHub Pages**:
+- Triggered on every GitHub release
+- Includes versioned documentation (sphinx-multiversion)
+- Includes coverage reports
+- Available at: `https://your-username.github.io/your-repo-name/`
+
+**Setup**:
+1. Go to Settings → Pages → Source → GitHub Actions
+2. Documentation will be automatically deployed on first release
+
+### 🔄 Dependency Management
+
+**Dependabot Configuration**:
+- **Rust dependencies**: Weekly updates on Mondays
+- **GitHub Actions**: Weekly updates on Mondays
+- **Python dependencies**: Weekly updates on Mondays
+- All updates use conventional commit format for proper versioning
+
+### ⚡ CI/CD Workflows
+
+**On every PR and push**:
+- **Nix Flake Check**: Validates the entire Nix environment
+- **Coverage Generation**: Creates HTML and LCOV reports
+- **Documentation Build**: Validates documentation builds successfully
+- **PR Comments**: Automatic comments with artifact links
+
+**On releases**:
+- **Documentation Deployment**: Updates GitHub Pages
+- **Release Comments**: Adds deployment links to GitHub releases
+
+### 🔧 Conventional Commits
+
+This template uses [Conventional Commits](https://www.conventionalcommits.org/) for automatic versioning:
+
+```bash
+# Patch release (bug fixes)
+git commit -m "fix: resolve memory leak in parser"
+
+# Minor release (new features)
+git commit -m "feat: add new configuration option"
+
+# Major release (breaking changes)
+git commit -m "feat!: redesign API interface"
+
+# Documentation (no version bump)
+git commit -m "docs: update installation guide"
+
+# Chores (no version bump)
+git commit -m "chore: update dependencies"
+```
+
+### 📊 Coverage & Quality
+
+**Automatic coverage reporting**:
+- Generated on every CI run
+- HTML reports uploaded as artifacts
+- Deployed to GitHub Pages at `/coverage/`
+- No CI failures on coverage thresholds (configurable)
+
+**Code quality checks**:
+- Rust formatting (`cargo fmt`)
+- Linting (`cargo clippy`)
+- Security audits (`cargo audit`)
+- Dependency licensing (`cargo deny`)
+- API compatibility (`cargo semver-checks`)
+
+## 🛠️ Available Nix Apps
+
+This template provides several convenient Nix apps:
+
+```bash
+# Build the project
+nix build
+
+# Run the project
+nix run
+
+# Generate coverage reports
+nix run .#coverage
+
+# Build documentation
+nix run .#docs
+
+# Build and serve documentation locally
+nix run .#serve-docs
+```
+
+## 🔧 Customization
+
+### Modifying Release Behavior
+
+Edit `release-plz.toml` to customize:
+- Release frequency (`release_always`)
+- Changelog format
+- PR and release templates
+- Publishing settings
+
+### Adding Dependencies
+
+**Rust dependencies**: Add to `Cargo.toml` as usual
+**Python dependencies**: Add to `requirements.txt`
+**Nix dependencies**: Add to `flake.nix` packages list
+
+### Documentation Customization
+
+- **Sphinx config**: Edit `docs/source/conf.py`
+- **Documentation content**: Add `.rst` or `.md` files to `docs/source/`
+- **Themes and styling**: Modify Sphinx configuration
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**"sphinxcontrib-rust build fails"**:
+- Ensure you're in the Nix development shell
+- The virtual environment setup handles Rust toolchain conflicts automatically
+
+**"Documentation not building"**:
+- Ensure you have at least one Git tag: `git tag v0.1.0`
+- Check that your Rust code has proper doc comments
+
+**"Release-plz not creating releases"**:
+- Verify GitHub Actions permissions are configured
+- Check that `CARGO_REGISTRY_TOKEN` secret is set
+- Ensure commits follow conventional commit format
+
+**"Coverage reports empty"**:
+- Make sure you have tests in your project
+- Verify the `RUSTFLAGS` environment variable is set correctly
+
+### Getting Help
+
+- **Nix Issues**: [Nix Manual](https://nixos.org/manual/nix/stable/)
+- **Release-plz**: [Release-plz Documentation](https://release-plz.dev/)
+- **Sphinx**: [Sphinx Documentation](https://www.sphinx-doc.org/)
+- **Conventional Commits**: [Conventional Commits Specification](https://www.conventionalcommits.org/)
+
+## 📄 License
+
+This template is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request. Make sure to follow the conventional commit format for proper versioning.
+
+---
+
+**Happy coding! 🦀✨**

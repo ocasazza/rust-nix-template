@@ -1,0 +1,107 @@
+name: Deploy Documentation
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch: # Allow manual triggering
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy-docs:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required for sphinx-multiversion
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v22
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+
+      - name: Build Documentation
+        run: nix run .#docs
+
+      - name: Generate Coverage Report
+        run: nix run .#coverage
+
+      - name: Prepare Pages Content
+        run: |
+          # Create the pages directory structure
+          mkdir -p pages
+
+          # Copy documentation (sphinx-multiversion creates version directories)
+          cp -r docs/build/html/* pages/
+
+          # Copy coverage report to a subdirectory
+          mkdir -p pages/coverage
+          cp -r target/coverage/html/* pages/coverage/
+
+          # Create a simple index redirect if needed
+          if [ ! -f pages/index.html ]; then
+            cat > pages/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <title>Rust Nix Template Documentation</title>
+            <meta http-equiv="refresh" content="0; url=./main/">
+          </head>
+          <body>
+            <p>Redirecting to <a href="./main/">documentation</a>...</p>
+          </body>
+          </html>
+          EOF
+          fi
+
+          # Add coverage link to main documentation if possible
+          echo "📊 Coverage report available at: /coverage/" >> pages/README.md || true
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload to GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: pages
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Comment on Release
+        if: github.event_name == 'release'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const releaseId = context.payload.release.id;
+            const deploymentUrl = '${{ steps.deployment.outputs.page_url }}';
+
+            const comment = `## 🚀 Documentation Deployed!
+
+            📖 **Documentation**: ${deploymentUrl}
+            📊 **Coverage Report**: ${deploymentUrl}coverage/
+
+            The documentation has been automatically updated and deployed to GitHub Pages.`;
+
+            await github.rest.repos.createReleaseComment({
+              owner,
+              repo,
+              release_id: releaseId,
+              body: comment
+            });
