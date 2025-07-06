@@ -11,3 +11,9 @@ keys = ["dependencies"]
 
 [rule.formatting]
 reorder_keys = true
+
+[[rule]]
+include = ["**/release-plz.toml"]
+
+[rule.formatting]
+reorder_keys = false

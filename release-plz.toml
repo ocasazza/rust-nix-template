@@ -29,13 +29,9 @@ git_release_body = """{{ changelog }}
 
 ## 🚀 Quick Start
 
-```bash
-# Use this template
-cargo generate --git https://github.com/ocasazza/rust-nix-template
-
-# Or with Nix
-nix flake new -t github:ocasazza/rust-nix-template my-project
-```
+Use this template:
+- cargo generate --git https://github.com/ocasazza/rust-nix-template
+- nix flake new -t github:ocasazza/rust-nix-template my-project
 """
 
 # Custom PR body template
