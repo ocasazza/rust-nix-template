@@ -3,3 +3,4 @@ sphinx_rtd_theme
 sphinx-multiversion
 myst-parser>=3,<5
 sphinxcontrib-rust>=1.0.0
+toml

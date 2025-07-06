@@ -19,20 +19,27 @@ dependencies_update = true
 generate_changelog = true
 changelog_path = "CHANGELOG.md"
 
+# Package-specific configuration
+[[package]]
+name = "rust_nix_template"
+# The version in Cargo.toml will be automatically updated by release-plz
+# The docs/source/conf.py will automatically read from Cargo.toml
+# No additional files need manual version updates
+
 # Custom release body template with links to docs and coverage
 git_release_body = """{{ changelog }}
 
 ## 📚 Documentation & Reports
 
-- 📖 [Documentation](https://ocasazza.github.io/rust-nix-template/)
-- 📊 [Coverage Report](https://ocasazza.github.io/rust-nix-template/coverage/)
-- 🔧 [Development Guide](https://github.com/ocasazza/rust-nix-template#development)
+- 📖 [Documentation](https://ocasazza.github.io/rust_nix_template/)
+- 📊 [Coverage Report](https://ocasazza.github.io/rust_nix_template/coverage/)
+- 🔧 [Development Guide](https://github.com/ocasazza/rust_nix_template#development)
 
 ## 🚀 Quick Start
 
 Use this template:
-- cargo generate --git https://github.com/ocasazza/rust-nix-template
-- nix flake new -t github:ocasazza/rust-nix-template my-project
+- cargo generate --git https://github.com/ocasazza/rust_nix_template
+- nix flake new -t github:ocasazza/rust_nix_template my-project
 """
 
 # Custom PR body template
@@ -53,7 +60,7 @@ pr_body = """## 🤖 Automated Release
 
 ## 📚 Documentation
 
-Documentation will be automatically updated at https://ocasazza.github.io/rust-nix-template/ when this PR is merged.
+Documentation will be automatically updated at https://ocasazza.github.io/rust_nix_template/ when this PR is merged.
 
 ---
 *This PR was generated automatically by [release-plz](https://github.com/release-plz/release-plz/)*
@@ -102,14 +109,14 @@ commit_parsers = [
 
 # Link parsers for GitHub issues and PRs
 link_parsers = [
-  { pattern = "#(\\d+)", href = "https://github.com/ocasazza/rust-nix-template/issues/$1" },
+  { pattern = "#(\\d+)", href = "https://github.com/ocasazza/rust_nix_template/issues/$1" },
   { pattern = "RFC(\\d+)", text = "ietf-rfc$1", href = "https://datatracker.ietf.org/doc/html/rfc$1" },
 ]
 
 # Commit preprocessors to clean up commit messages
 commit_preprocessors = [
   # Convert issue numbers to links
-  { pattern = "\\(#([0-9]+)\\)", replace = "([#${1}](https://github.com/ocasazza/rust-nix-template/pull/${1}))" },
+  { pattern = "\\(#([0-9]+)\\)", replace = "([#${1}](https://github.com/ocasazza/rust_nix_template/pull/${1}))" },
   # Remove conventional commit scopes for cleaner changelog
   { pattern = "^(\\w+)\\((.+)\\):", replace = "$1: " },
 ]
