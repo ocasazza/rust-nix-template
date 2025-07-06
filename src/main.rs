@@ -1,4 +1,4 @@
-use rust_nix_template::{greet, add, factorial};
+use rust_nix_template::{add, factorial, greet};
 
 fn main() {
     println!("🦀 Welcome to the Rust Nix Template!");

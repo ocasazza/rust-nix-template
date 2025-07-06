@@ -15,9 +15,6 @@ semver_check = true
 # Update all dependencies in release PRs
 dependencies_update = true
 
-# Add labels to release PRs for automation
-pr_labels = ["release", "automated"]
-
 # Custom release body template with links to docs and coverage
 git_release_body = """{{ changelog }}
 
@@ -67,32 +64,32 @@ sort_commits = "newest"
 
 # Custom commit parsers for better categorization
 commit_parsers = [
-    { message = "^feat", group = "🚀 Features" },
-    { message = "^fix", group = "🐛 Bug Fixes" },
-    { message = "^doc", group = "📚 Documentation" },
-    { message = "^perf", group = "⚡ Performance" },
-    { message = "^refactor", group = "♻️ Refactor" },
-    { message = "^style", group = "🎨 Styling" },
-    { message = "^test", group = "🧪 Testing" },
-    { message = "^chore\\(release\\): prepare for", skip = true },
-    { message = "^chore\\(deps.*\\)", skip = true },
-    { message = "^chore", group = "🔧 Miscellaneous" },
-    { message = "^ci", group = "👷 CI/CD" },
-    { message = "^build", group = "📦 Build" },
-    { message = "^revert", group = "⏪ Reverts" },
-    { message = ".*", group = "📝 Other" },
+  { message = "^feat", group = "🚀 Features" },
+  { message = "^fix", group = "🐛 Bug Fixes" },
+  { message = "^doc", group = "📚 Documentation" },
+  { message = "^perf", group = "⚡ Performance" },
+  { message = "^refactor", group = "♻️ Refactor" },
+  { message = "^style", group = "🎨 Styling" },
+  { message = "^test", group = "🧪 Testing" },
+  { message = "^chore\\(release\\): prepare for", skip = true },
+  { message = "^chore\\(deps.*\\)", skip = true },
+  { message = "^chore", group = "🔧 Miscellaneous" },
+  { message = "^ci", group = "👷 CI/CD" },
+  { message = "^build", group = "📦 Build" },
+  { message = "^revert", group = "⏪ Reverts" },
+  { message = ".*", group = "📝 Other" },
 ]
 
 # Link parsers for GitHub issues and PRs
 link_parsers = [
-    { pattern = "#(\\d+)", href = "https://github.com/ocasazza/rust-nix-template/issues/$1" },
-    { pattern = "RFC(\\d+)", text = "ietf-rfc$1", href = "https://datatracker.ietf.org/doc/html/rfc$1" }
+  { pattern = "#(\\d+)", href = "https://github.com/ocasazza/rust-nix-template/issues/$1" },
+  { pattern = "RFC(\\d+)", text = "ietf-rfc$1", href = "https://datatracker.ietf.org/doc/html/rfc$1" },
 ]
 
 # Commit preprocessors to clean up commit messages
 commit_preprocessors = [
-    # Convert issue numbers to links
-    { pattern = "\\(#([0-9]+)\\)", replace = "([#${1}](https://github.com/ocasazza/rust-nix-template/pull/${1}))" },
-    # Remove conventional commit scopes for cleaner changelog
-    { pattern = "^(\\w+)\\((.+)\\):", replace = "$1: " },
+  # Convert issue numbers to links
+  { pattern = "\\(#([0-9]+)\\)", replace = "([#${1}](https://github.com/ocasazza/rust-nix-template/pull/${1}))" },
+  # Remove conventional commit scopes for cleaner changelog
+  { pattern = "^(\\w+)\\((.+)\\):", replace = "$1: " },
 ]

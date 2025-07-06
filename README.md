@@ -106,19 +106,17 @@ This template provides comprehensive automation for the entire development lifec
 
 **Release Strategy**:
 - **Patch releases** (0.1.0 → 0.1.1): Automatic on every commit to `main`
-- **Minor releases** (0.1.0 → 0.2.0): Triggered by conventional commit PRs (e.g., `feat:`)
-- **Major releases** (0.1.0 → 1.0.0): Manual via breaking change commits (e.g., `feat!:`)
+- **Minor releases** (0.1.0 → 0.2.0): Triggered by conventional commits (e.g., `feat:`)
+- **Major releases** (0.1.0 → 1.0.0): Triggered by breaking change commits (e.g., `feat!:`)
 
 **Setup**:
-1. **Configure GitHub Actions permissions**: Go to Settings → Actions → General → Workflow permissions → Allow GitHub Actions to create and approve pull requests
-2. **Add Repository Secrets**:
+1. **Add Repository Secrets**:
    - `CARGO_REGISTRY_TOKEN`: Your API token from `crates.io` for publishing
 
 **How It Works**:
-1. Push commits to `main` → `release-plz` analyzes changes and creates releases
-2. For minor/major changes → `release-plz` opens a Release PR with changelog
-3. Merge Release PR → Package published to crates.io + GitHub Release created
-4. GitHub Release triggers documentation deployment
+1. Push commits to `main` → `release-plz` analyzes changes and creates direct releases
+2. Package automatically published to crates.io + GitHub Release created
+3. GitHub Release triggers documentation deployment
 
 ### 📚 Documentation Deployment
 
