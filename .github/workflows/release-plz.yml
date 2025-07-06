@@ -26,11 +26,20 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
       - name: Clean workspace
         run: |
-          # Remove any Nix-related files that might cause path issues
-          rm -rf .envrc result result-* .direnv
-          # Ensure we're working with a clean Git repository
-          git clean -fdx
-          git reset --hard HEAD
+          # Remove specific Nix-related files that might cause path issues
+          rm -rf .envrc result result-* .direnv || true
+          # Remove target directory if it exists
+          rm -rf target || true
+          # Ensure we have a clean working directory
+          git status
+      - name: Verify configuration files
+        run: |
+          echo "Checking for release-plz.toml..."
+          ls -la release-plz.toml
+          echo "Checking for Cargo.toml..."
+          ls -la Cargo.toml
+          echo "Current directory contents:"
+          ls -la
       - name: Run release-plz
         uses: release-plz/action@v0.5
         with:
