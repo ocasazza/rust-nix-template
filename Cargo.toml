@@ -1,12 +1,12 @@
 [package]
-name = "rust-nix-template"
+name = "rust_nix_template"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
 description = "A comprehensive Rust project template with Nix, automated releases, and documentation"
-repository = "https://github.com/ocasazza/rust-nix-template"
-homepage = "https://ocasazza.github.io/rust-nix-template/"
-documentation = "https://ocasazza.github.io/rust-nix-template/"
+repository = "https://github.com/ocasazza/rust_nix_template"
+homepage = "https://ocasazza.github.io/rust_nix_template/"
+documentation = "https://ocasazza.github.io/rust_nix_template/"
 readme = "README.md"
 keywords = ["template", "nix", "automation", "documentation", "rust"]
 authors = ["Olive Casazza <olive.casazza@schrodinger.com>"]
@@ -18,7 +18,7 @@ name = "rust_nix_template"
 path = "src/lib.rs"
 
 [[bin]]
-name = "rust-nix-template"
+name = "rust_nix_template"
 path = "src/main.rs"
 
 [dependencies]

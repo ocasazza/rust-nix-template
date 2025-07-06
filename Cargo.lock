@@ -71,7 +71,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rust-nix-template"
+name = "rust_nix_template"
 version = "0.1.0"
 dependencies = [
  "sphinx-rustdocgen",

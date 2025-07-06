@@ -1,5 +1,22 @@
+//! # Rust Nix Template CLI
+//!
+//! This is the main executable for the Rust Nix Template project.
+//! It demonstrates the library functions and showcases the project's features.
+//!
+//! ## Usage
+//!
+//! ```bash
+//! cargo run
+//! # or
+//! nix run
+//! ```
+
 use rust_nix_template::{add, factorial, greet};
 
+/// Main entry point for the Rust Nix Template CLI.
+///
+/// This function demonstrates the library's functionality and provides
+/// information about the project's features and available commands.
 fn main() {
     println!("🦀 Welcome to the Rust Nix Template!");
     println!();
